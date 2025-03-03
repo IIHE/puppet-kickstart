@@ -110,38 +110,18 @@
 #   Boolean. Raises an error for commands in the $commands hash if set to true,
 #   only warns if set to false.
 define kickstart (
-  $commands,
-  $ensure                       = present,
-  $filename                     = $title,
-  $repos                        = false,
-  $packages                     = false,
-  $partition_configuration      = false,
-  $fragments                    = false,
-  $fragment_variables           = false,
-  $addons                       = false,
-  $template                     = 'kickstart/kickstart.erb',
-  $fail_on_unsupported_commands = true,
+  Hash $commands,
+  Enum['present', 'absent'] $ensure        = 'present',
+  Stdlib::Absolutepath $filename           = $title,
+  Optional[Hash] $repos                    = undef,
+  Optional[Variant[Array, Hash]] $packages = undef,
+  Optional[Hash] $partition_configuration  = undef,
+  Optional[Hash] $fragments                = undef,
+  Optional[Hash] $fragment_variables       = undef,
+  Optional[Hash] $addons                   = undef,
+  String $template                         = 'kickstart/kickstart.erb',
+  Boolean $fail_on_unsupported_commands    = true,
 ) {
-
-  validate_re($ensure, '^present$|^absent$', 'Invalid value for ensure. Must be \'present\' or \'absent\'')
-  validate_string($template)
-  validate_absolute_path($filename)
-  validate_bool($fail_on_unsupported_commands)
-  validate_hash($commands)
-
-  if $repos { validate_hash($repos) }
-  if $packages {
-    if is_array($packages) {
-      validate_array($packages)
-    } else {
-      validate_hash($packages)
-    }
-  }
-  if $partition_configuration { validate_hash($partition_configuration) }
-  if $fragments { validate_hash($fragments) }
-  if $fragment_variables { validate_hash($fragment_variables) }
-  if $addons { validate_hash($addons) }
-
   $valid_commands = [
     auth,
     authconfig,
@@ -203,7 +183,7 @@ define kickstart (
     zerombr,
     zfcp,
     '%include',
-    '%ksappend'
+    '%ksappend',
   ]
 
   if $commands and ! empty($commands) {
@@ -228,5 +208,4 @@ define kickstart (
     ensure  => $ensure,
     content => template($template),
   }
-
 }
